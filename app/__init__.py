@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -37,4 +39,26 @@ def create_app(config_name='default'):
     app.register_blueprint(services_bp)
     app.register_blueprint(invoices_bp)
 
+    # Tägliche Gewinnspiel-Prüfung per IMAP
+    # Im Debug-Modus nur im Haupt-Prozess starten (nicht im Werkzeug-Reloader-Watcher)
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        _start_lottery_scheduler(app)
+
     return app
+
+
+def _start_lottery_scheduler(app):
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from app.email_utils import check_lottery_redemptions
+
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(
+        func=check_lottery_redemptions,
+        args=[app],
+        trigger='cron',
+        hour=9,
+        minute=0,
+        id='lottery_check',
+        replace_existing=True,
+    )
+    scheduler.start()

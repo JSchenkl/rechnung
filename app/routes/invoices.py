@@ -9,7 +9,7 @@ from flask_login import login_required
 
 from app import db
 from app.models import Invoice, InvoiceItem, Customer, Service
-from app.email_utils import send_invoice_email, generate_pdf
+from app.email_utils import send_invoice_email, generate_pdf, run_lottery_draw
 
 invoices_bp = Blueprint('invoices', __name__, url_prefix='/invoices')
 
@@ -122,6 +122,9 @@ def pdf(id):
 @login_required
 def send(id):
     invoice = Invoice.query.get_or_404(id)
+    invoice.lottery = 'lottery' in request.form
+    db.session.commit()
+
     try:
         send_invoice_email(invoice)
         invoice.status = 'sent'
@@ -130,6 +133,14 @@ def send(id):
         flash(f'Rechnung erfolgreich an {invoice.customer.email} verschickt.', 'success')
     except Exception as e:
         flash(f'Fehler beim Versenden: {e}', 'danger')
+        return redirect(url_for('invoices.detail', id=invoice.id))
+
+    if invoice.lottery and not invoice.lottery_entry:
+        try:
+            run_lottery_draw(invoice)
+        except Exception as e:
+            current_app.logger.error(f'Gewinnspiel-Auslosung fehlgeschlagen (Rechnung {invoice.id}): {e}')
+
     return redirect(url_for('invoices.detail', id=invoice.id))
 
 

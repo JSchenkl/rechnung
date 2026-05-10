@@ -1,0 +1,12 @@
+Hallo Julius,
+
+ein Kunde hat seinen Gewinnspiel-Gutschein eingeloest.
+
+Kunde:         {{ invoice.customer.name }}
+Rechnung:      {{ invoice.invoice_number }}
+Einloesecode:  {{ entry.code }}
+E-Mail von:    {{ from_addr }}
+
+Bitte 1,00 EUR von der naechsten Rechnung abziehen.
+
+Julius Rechnungs-App

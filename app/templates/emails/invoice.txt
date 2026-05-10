@@ -7,7 +7,14 @@ Zahlungsziel:    {{ invoice.due_date.strftime('%d.%m.%Y') }}
 IBAN:            {{ owner.iban }}
 
 Bitte überweisen Sie den Betrag bis zum {{ invoice.due_date.strftime('%d.%m.%Y') }} auf das oben genannte Konto.
-
+{% if invoice.lottery %}
+-----------------------------------------------
+GEWINNSPIEL – 33 % Chance auf 1 € Gutschein
+-----------------------------------------------
+Diese Rechnung enthält eine Gewinnspiel-Teilnahme (+0,50 €).
+Das Ergebnis erhalten Sie in einer separaten E-Mail.
+-----------------------------------------------
+{% endif %}
 Bei Fragen stehe ich Ihnen gerne zur Verfügung.
 
 Mit freundlichen Grüßen

@@ -1,0 +1,16 @@
+Sehr geehrte/r {{ invoice.customer.name }},
+
+herzlichen Glückwunsch! Sie haben beim Gewinnspiel zu Rechnung {{ invoice.invoice_number }} gewonnen!
+
+Ihr Gewinn: 1,00 € Gutschein für Ihre nächste Rechnung
+
+Ihr persönlicher Einlösecode lautet:
+
+    {{ code }}
+
+Bitte antworten Sie auf diese E-Mail und nennen Sie darin Ihren 6-stelligen Code.
+Der Gutschein wird dann bei Ihrer nächsten Rechnung angerechnet.
+
+Mit freundlichen Grüßen
+{{ owner.name }}
+{{ owner.email }}

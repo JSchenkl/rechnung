@@ -33,6 +33,11 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'rechnung@julius.schenkl.de')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
 
+    MAIL_IMAP_SERVER = os.environ.get('MAIL_IMAP_SERVER', 'imap.strato.de')
+    MAIL_IMAP_PORT = int(os.environ.get('MAIL_IMAP_PORT', '993'))
+
+    JULIUS_EMAIL = os.environ.get('JULIUS_EMAIL', 'julius@schenkl.de')
+
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin')
 
     OWNER_NAME = os.environ.get('OWNER_NAME', 'Julius Schenkl')

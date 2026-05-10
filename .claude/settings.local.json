@@ -8,7 +8,15 @@
       "Bash(py -c \"import sys; print\\(sys.executable\\)\")",
       "PowerShell(cd \"C:\\\\Users\\\\juliu\\\\OneDrive\\\\Dokumente\\\\Claude\\\\rechnung\"; $env:FLASK_APP = \"run.py\"; .\\\\venv\\\\Scripts\\\\flask db init 2>&1)",
       "PowerShell(gh repo *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "PowerShell(cd \"C:\\\\Users\\\\juliu\\\\OneDrive\\\\Dokumente\\\\Claude\\\\rechnung\"; gh secret set VPS_SSH_KEY --repo JSchenkl/rechnung --input \"$env:TEMP\\\\gh_actions_deploy\" 2>&1)",
+      "PowerShell(gh run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(venv\\\\Scripts\\\\activate.bat)",
+      "Bash(pip install *)",
+      "Bash(flask db *)"
     ]
   }
 }

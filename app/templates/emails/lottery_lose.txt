@@ -1,0 +1,9 @@
+Sehr geehrte/r {{ invoice.customer.name }},
+
+vielen Dank für Ihre Teilnahme am Gewinnspiel zu Rechnung {{ invoice.invoice_number }}.
+
+Leider haben Sie dieses Mal nicht gewonnen – beim nächsten Mal haben Sie wieder eine 33 % Chance auf einen 1 € Gutschein!
+
+Mit freundlichen Grüßen
+{{ owner.name }}
+{{ owner.email }}

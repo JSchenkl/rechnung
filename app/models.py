@@ -1,4 +1,6 @@
-from datetime import date
+import random
+import string
+from datetime import date, datetime
 from app import db
 
 
@@ -45,6 +47,7 @@ class Invoice(db.Model):
     status = db.Column(db.Enum('draft', 'sent', 'paid'), nullable=False, default='draft')
     sent_at = db.Column(db.DateTime)
     notes = db.Column(db.Text)
+    lottery = db.Column(db.Boolean, nullable=False, default=False)
 
     items = db.relationship(
         'InvoiceItem', backref='invoice', lazy=True, cascade='all, delete-orphan'
@@ -52,7 +55,8 @@ class Invoice(db.Model):
 
     @property
     def total(self):
-        return sum(float(item.quantity) * float(item.unit_price) for item in self.items)
+        base = sum(float(item.quantity) * float(item.unit_price) for item in self.items)
+        return base + (0.50 if self.lottery else 0)
 
     def __repr__(self):
         return f'<Invoice {self.invoice_number}>'
@@ -71,3 +75,21 @@ class InvoiceItem(db.Model):
     @property
     def total(self):
         return float(self.quantity) * float(self.unit_price)
+
+
+class LotteryEntry(db.Model):
+    __tablename__ = 'lottery_entries'
+
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=False, unique=True)
+    won = db.Column(db.Boolean, nullable=False)
+    code = db.Column(db.String(6))
+    code_redeemed = db.Column(db.Boolean, nullable=False, default=False)
+    julius_notified = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    invoice = db.relationship('Invoice', backref=db.backref('lottery_entry', uselist=False))
+
+    @staticmethod
+    def generate_code():
+        return ''.join(random.choices(string.digits, k=6))
