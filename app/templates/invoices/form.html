@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% block title %}Neue Rechnung{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Neue Rechnung <span class="text-muted fs-5">{{ next_number }}</span></h2>
+
+<form method="post" id="invoice-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="row g-4">
+    <!-- Linke Spalte -->
+    <div class="col-md-7">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Kunde & Zeitraum</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Kunde *</label>
+            <select name="customer_id" class="form-select" required>
+              <option value="">– Kunde auswählen –</option>
+              {% for c in customers %}
+              <option value="{{ c.id }}">{{ c.name }}{% if c.company %} ({{ c.company }}){% endif %}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">
+              <a href="{{ url_for('customers.create') }}" target="_blank">
+                <i class="bi bi-plus-circle me-1"></i>Neuen Kunden anlegen
+              </a>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Leistungszeitraum <span class="text-muted">(optional)</span></label>
+            <input type="text" name="service_period" class="form-control"
+                   placeholder="z.B. Mai 2026">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Zahlbar bis *</label>
+            <input type="date" name="due_date" class="form-control" value="{{ default_due }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Notizen <span class="text-muted">(optional)</span></label>
+            <textarea name="notes" class="form-control" rows="2"
+                      placeholder="Interne Notiz (erscheint nicht auf der Rechnung)"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rechte Spalte: Leistungsauswahl Schnellzugriff -->
+    <div class="col-md-5">
+      <div class="card shadow-sm mb-4 bg-light">
+        <div class="card-header fw-semibold">Leistungen schnell hinzufügen</div>
+        <div class="card-body">
+          {% if services %}
+          <div class="d-flex flex-column gap-2">
+            {% for s in services %}
+            <button type="button" class="btn btn-outline-primary btn-sm text-start add-service-btn"
+                    data-name="{{ s.name }}"
+                    data-price="{{ '%.2f'|format(s.default_price) }}"
+                    data-unit="{{ s.unit }}">
+              <i class="bi bi-plus me-1"></i>{{ s.name }}
+              <span class="float-end text-muted">{{ '%.2f'|format(s.default_price)|replace('.', ',') }} € / {{ s.unit }}</span>
+            </button>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted mb-0 small">
+            <a href="{{ url_for('services.create') }}" target="_blank">Leistungen anlegen</a>,
+            um sie hier schnell hinzuzufügen.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Positionen-Tabelle -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+      Positionen
+      <button type="button" id="add-row" class="btn btn-sm btn-outline-success">
+        <i class="bi bi-plus-lg me-1"></i>Zeile hinzufügen
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0" id="items-table">
+        <thead class="table-light">
+          <tr>
+            <th>Beschreibung *</th>
+            <th style="width:90px">Menge</th>
+            <th style="width:110px">Einheit</th>
+            <th style="width:120px">Preis (€) *</th>
+            <th style="width:110px" class="text-end">Gesamt</th>
+            <th style="width:45px"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          <!-- Zeilen werden per JS eingefügt -->
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <td colspan="4" class="text-end fw-bold">Gesamtbetrag</td>
+            <td class="text-end fw-bold" id="grand-total">0,00 €</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary px-4">
+      <i class="bi bi-save me-1"></i>Rechnung erstellen
+    </button>
+    <a href="{{ url_for('invoices.list') }}" class="btn btn-outline-secondary">Abbrechen</a>
+  </div>
+</form>
+
+<!-- Zeilen-Template (hidden) -->
+<template id="row-template">
+  <tr class="item-row">
+    <td>
+      <input type="text" name="description" class="form-control form-control-sm desc-input"
+             placeholder="Leistungsbeschreibung" required>
+    </td>
+    <td>
+      <input type="text" name="quantity" class="form-control form-control-sm qty-input"
+             value="1" required>
+    </td>
+    <td>
+      <select name="unit" class="form-select form-select-sm unit-select">
+        <option value="pauschal">pauschal</option>
+        <option value="Stunde">Stunde</option>
+        <option value="m²">m²</option>
+      </select>
+    </td>
+    <td>
+      <input type="text" name="unit_price" class="form-control form-control-sm price-input"
+             placeholder="0,00" required>
+    </td>
+    <td class="text-end row-total align-middle">–</td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger delete-row">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </td>
+  </tr>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const tbody = document.getElementById('items-body');
+const template = document.getElementById('row-template');
+const grandTotalEl = document.getElementById('grand-total');
+
+function parseNum(val) {
+  return parseFloat(String(val).replace(',', '.')) || 0;
+}
+
+function formatEur(val) {
+  return val.toFixed(2).replace('.', ',') + ' €';
+}
+
+function updateTotals() {
+  let grand = 0;
+  tbody.querySelectorAll('.item-row').forEach(row => {
+    const qty = parseNum(row.querySelector('.qty-input').value);
+    const price = parseNum(row.querySelector('.price-input').value);
+    const total = qty * price;
+    grand += total;
+    row.querySelector('.row-total').textContent = total > 0 ? formatEur(total) : '–';
+  });
+  grandTotalEl.textContent = formatEur(grand);
+}
+
+function addRow(desc = '', price = '', unit = 'pauschal') {
+  const clone = template.content.cloneNode(true);
+  const row = clone.querySelector('tr');
+
+  if (desc) row.querySelector('.desc-input').value = desc;
+  if (price) row.querySelector('.price-input').value = price.replace('.', ',');
+  const sel = row.querySelector('.unit-select');
+  for (let opt of sel.options) {
+    if (opt.value === unit) { opt.selected = true; break; }
+  }
+
+  row.querySelector('.delete-row').addEventListener('click', () => {
+    row.remove();
+    updateTotals();
+  });
+
+  row.querySelectorAll('input').forEach(el => el.addEventListener('input', updateTotals));
+
+  tbody.appendChild(row);
+  updateTotals();
+}
+
+document.getElementById('add-row').addEventListener('click', () => addRow());
+
+document.querySelectorAll('.add-service-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    addRow(btn.dataset.name, btn.dataset.price, btn.dataset.unit);
+  });
+});
+
+// Mindestens eine leere Zeile beim Laden
+addRow();
+</script>
+{% endblock %}

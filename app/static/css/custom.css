@@ -1,0 +1,18 @@
+body {
+  font-size: 0.95rem;
+}
+
+.navbar-brand {
+  font-size: 1.1rem;
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge {
+  font-size: 0.78rem;
+}

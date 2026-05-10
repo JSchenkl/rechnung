@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 2cm 2.5cm 2.5cm 2.5cm;
+  }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #222222;
+    line-height: 1.4;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .header-table td {
+    vertical-align: top;
+    padding: 0;
+  }
+  .sender-small {
+    font-size: 7.5pt;
+    color: #555555;
+    border-bottom: 1px solid #cccccc;
+    padding-bottom: 3pt;
+    margin-bottom: 6pt;
+  }
+  .invoice-meta {
+    text-align: right;
+    font-size: 9pt;
+    color: #444444;
+    line-height: 1.6;
+  }
+  h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin-top: 20pt;
+    margin-bottom: 4pt;
+    border-bottom: 2px solid #222222;
+    padding-bottom: 3pt;
+  }
+  .meta-row td {
+    font-size: 9pt;
+    padding: 3pt 12pt 3pt 0;
+    vertical-align: top;
+  }
+  .meta-label {
+    color: #555555;
+    font-weight: normal;
+    width: 90pt;
+  }
+  .meta-value {
+    font-weight: bold;
+  }
+  .positions {
+    margin-top: 12pt;
+    font-size: 9.5pt;
+  }
+  .positions thead tr {
+    background-color: #f0f0f0;
+  }
+  .positions th {
+    padding: 5pt 6pt;
+    text-align: left;
+    font-weight: bold;
+    font-size: 8.5pt;
+    border-bottom: 1.5px solid #cccccc;
+  }
+  .positions th.right,
+  .positions td.right {
+    text-align: right;
+  }
+  .positions td {
+    padding: 5pt 6pt;
+    border-bottom: 1px solid #e8e8e8;
+    vertical-align: top;
+  }
+  .total-table {
+    margin-top: 6pt;
+  }
+  .total-table td {
+    padding: 4pt 6pt;
+    text-align: right;
+    font-size: 11pt;
+    font-weight: bold;
+    border-top: 2px solid #222222;
+  }
+  .notice {
+    margin-top: 16pt;
+    font-size: 8.5pt;
+    color: #555555;
+    border-left: 3px solid #cccccc;
+    padding-left: 8pt;
+    padding-top: 3pt;
+    padding-bottom: 3pt;
+  }
+  .footer {
+    margin-top: 20pt;
+    font-size: 9pt;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<!-- Kopfbereich: Absender links, Rechnungs-Metadaten rechts -->
+<table class="header-table">
+  <tr>
+    <td style="width: 55%">
+      <div class="sender-small">{{ owner.name }} · {{ owner.street }} · {{ owner.postal_code }} {{ owner.city }}</div>
+      <div>
+        <strong>{{ invoice.customer.name }}</strong><br>
+        {% if invoice.customer.company %}{{ invoice.customer.company }}<br>{% endif %}
+        {{ invoice.customer.street }}<br>
+        {{ invoice.customer.postal_code }} {{ invoice.customer.city }}
+      </div>
+    </td>
+    <td style="width: 45%; text-align: right; vertical-align: top;">
+      <div class="invoice-meta">
+        <strong style="font-size: 13pt;">{{ owner.name }}</strong><br>
+        {{ owner.street }}<br>
+        {{ owner.postal_code }} {{ owner.city }}<br>
+        {{ owner.email }}
+      </div>
+    </td>
+  </tr>
+</table>
+
+<h1>Rechnung {{ invoice.invoice_number }}</h1>
+
+<!-- Rechnungs-Metadaten -->
+<table class="meta-row">
+  <tr>
+    <td class="meta-label">Rechnungsdatum</td>
+    <td class="meta-value">{{ invoice.issue_date.strftime('%d.%m.%Y') }}</td>
+    <td style="width: 20pt"></td>
+    <td class="meta-label">Zahlbar bis</td>
+    <td class="meta-value">{{ invoice.due_date.strftime('%d.%m.%Y') }}</td>
+    {% if invoice.service_period %}
+    <td style="width: 20pt"></td>
+    <td class="meta-label">Leistungszeitraum</td>
+    <td class="meta-value">{{ invoice.service_period }}</td>
+    {% endif %}
+  </tr>
+</table>
+
+<!-- Positionen -->
+<table class="positions">
+  <thead>
+    <tr>
+      <th style="width: 50%">Beschreibung</th>
+      <th class="right" style="width: 10%">Menge</th>
+      <th style="width: 12%">Einheit</th>
+      <th class="right" style="width: 13%">Einzelpreis</th>
+      <th class="right" style="width: 15%">Gesamt</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in invoice.items %}
+    <tr>
+      <td>{{ item.description }}</td>
+      <td class="right">{{ item.quantity }}</td>
+      <td>{{ item.unit }}</td>
+      <td class="right">{{ "%.2f"|format(item.unit_price)|replace('.', ',') }} €</td>
+      <td class="right"><strong>{{ "%.2f"|format(item.total)|replace('.', ',') }} €</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Summe -->
+<table class="total-table">
+  <tr>
+    <td style="width: 70%; border-top: none;"></td>
+    <td style="width: 30%; text-align: right; font-size: 12pt; font-weight: bold; border-top: 2px solid #222222; padding: 5pt 6pt;">
+      Gesamt: {{ "%.2f"|format(invoice.total)|replace('.', ',') }} €
+    </td>
+  </tr>
+</table>
+
+<!-- §19 UStG Hinweis -->
+<div class="notice">
+  Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
+</div>
+
+<!-- Bankverbindung -->
+<div class="footer">
+  <p>Bitte überweisen Sie den Betrag bis zum <strong>{{ invoice.due_date.strftime('%d.%m.%Y') }}</strong> auf folgendes Konto:</p>
+  <strong>Bankverbindung:</strong> {{ owner.name }} &nbsp;|&nbsp; IBAN: {{ owner.iban }}
+  <p style="margin-top: 16pt;">Vielen Dank für Ihr Vertrauen!</p>
+  <p>{{ owner.name }}</p>
+</div>
+
+</body>
+</html>

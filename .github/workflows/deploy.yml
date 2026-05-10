@@ -1,0 +1,32 @@
+# GitHub Actions Deploy-Workflow für IONOS VPS
+# Aktivierung: "if: false" entfernen und GitHub Secrets einrichten:
+#   VPS_HOST   – IP-Adresse oder Domain des VPS
+#   VPS_USER   – SSH-Benutzer (z.B. root oder deploy)
+#   VPS_KEY    – privater SSH-Schlüssel
+#   VPS_PATH   – Pfad zur App auf dem Server (z.B. /var/www/rechnung)
+
+name: Deploy to IONOS VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    if: false  # Entfernen, sobald VPS eingerichtet ist
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            cd ${{ secrets.VPS_PATH }}
+            git pull origin main
+            source venv/bin/activate
+            pip install -r requirements.txt --quiet
+            flask db upgrade
+            sudo systemctl restart rechnung

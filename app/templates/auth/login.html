@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Anmeldung{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-sm-8 col-md-5 col-lg-4">
+    <div class="card shadow">
+      <div class="card-body p-4">
+        <h4 class="card-title mb-4 text-center">
+          <i class="bi bi-receipt me-2"></i>Julius Schenkl
+        </h4>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Passwort</label>
+            <input type="password" name="password" class="form-control" autofocus required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Anmelden</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

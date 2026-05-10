@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Rechnung {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-0">Rechnung {{ invoice.invoice_number }}</h2>
+    <small class="text-muted">
+      {% if invoice.status == 'draft' %}<span class="badge bg-secondary">Entwurf</span>
+      {% elif invoice.status == 'sent' %}<span class="badge bg-primary">Versendet</span>
+      {% else %}<span class="badge bg-success">Bezahlt</span>{% endif %}
+      {% if invoice.sent_at %}
+        · verschickt am {{ invoice.sent_at.strftime('%d.%m.%Y %H:%M') }}
+      {% endif %}
+    </small>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('invoices.pdf', id=invoice.id) }}" class="btn btn-outline-secondary">
+      <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+    </a>
+    {% if invoice.status != 'paid' %}
+    <form method="post" action="{{ url_for('invoices.send', id=invoice.id) }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-primary"
+              onclick="return confirm('Rechnung an {{ invoice.customer.email }} senden?')">
+        <i class="bi bi-envelope me-1"></i>Per E-Mail senden
+      </button>
+    </form>
+    {% endif %}
+    {% if invoice.status == 'sent' %}
+    <form method="post" action="{{ url_for('invoices.mark_paid', id=invoice.id) }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-check-circle me-1"></i>Als bezahlt markieren
+      </button>
+    </form>
+    {% endif %}
+    {% if invoice.status != 'sent' %}
+    <form method="post" action="{{ url_for('invoices.delete', id=invoice.id) }}" class="d-inline"
+          onsubmit="return confirm('Rechnung wirklich löschen?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-danger">
+        <i class="bi bi-trash"></i>
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold">Kundendaten</div>
+      <div class="card-body">
+        <p class="mb-1 fw-bold">{{ invoice.customer.name }}</p>
+        {% if invoice.customer.company %}<p class="mb-1 text-muted">{{ invoice.customer.company }}</p>{% endif %}
+        <p class="mb-1">{{ invoice.customer.street }}</p>
+        <p class="mb-1">{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
+        <p class="mb-0"><a href="mailto:{{ invoice.customer.email }}">{{ invoice.customer.email }}</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold">Rechnungsdetails</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-6">Rechnungsnummer</dt>
+          <dd class="col-6">{{ invoice.invoice_number }}</dd>
+          <dt class="col-6">Ausgestellt am</dt>
+          <dd class="col-6">{{ invoice.issue_date.strftime('%d.%m.%Y') }}</dd>
+          <dt class="col-6">Zahlbar bis</dt>
+          <dd class="col-6">{{ invoice.due_date.strftime('%d.%m.%Y') }}</dd>
+          {% if invoice.service_period %}
+          <dt class="col-6">Leistungszeitraum</dt>
+          <dd class="col-6">{{ invoice.service_period }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+  <div class="card-header fw-semibold">Positionen</div>
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Beschreibung</th>
+          <th class="text-end">Menge</th>
+          <th>Einheit</th>
+          <th class="text-end">Einzelpreis</th>
+          <th class="text-end">Gesamt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in invoice.items %}
+        <tr>
+          <td>{{ item.description }}</td>
+          <td class="text-end">{{ item.quantity }}</td>
+          <td>{{ item.unit }}</td>
+          <td class="text-end">{{ "%.2f"|format(item.unit_price)|replace('.', ',') }} €</td>
+          <td class="text-end fw-semibold">{{ "%.2f"|format(item.total)|replace('.', ',') }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <td colspan="4" class="text-end fw-bold">Gesamtbetrag</td>
+          <td class="text-end fw-bold fs-5">{{ "%.2f"|format(invoice.total)|replace('.', ',') }} €</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+{% if invoice.notes %}
+<div class="card shadow-sm mt-4">
+  <div class="card-header fw-semibold">Notizen</div>
+  <div class="card-body">{{ invoice.notes }}</div>
+</div>
+{% endif %}
+
+<div class="mt-3">
+  <a href="{{ url_for('invoices.list') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Zurück
+  </a>
+</div>
+{% endblock %}

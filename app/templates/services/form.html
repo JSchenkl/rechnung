@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Leistung bearbeiten' if service else 'Neue Leistung' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-5">
+    <h2 class="mb-4">{{ 'Leistung bearbeiten' if service else 'Neue Leistung' }}</h2>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label class="form-label">Bezeichnung *</label>
+            <input type="text" name="name" class="form-control"
+                   value="{{ service.name if service else '' }}"
+                   placeholder="z.B. Küche reinigen" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Standardpreis (€) *</label>
+            <input type="text" name="default_price" class="form-control"
+                   value="{{ '%.2f'|format(service.default_price)|replace('.', ',') if service else '' }}"
+                   placeholder="45,00" required>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Einheit *</label>
+            <select name="unit" class="form-select">
+              {% set current_unit = service.unit if service else 'pauschal' %}
+              <option value="pauschal" {{ 'selected' if current_unit == 'pauschal' }}>pauschal</option>
+              <option value="Stunde"   {{ 'selected' if current_unit == 'Stunde' }}>Stunde</option>
+              <option value="m²"       {{ 'selected' if current_unit == 'm²' }}>m²</option>
+            </select>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Speichern</button>
+            <a href="{{ url_for('services.list') }}" class="btn btn-outline-secondary">Abbrechen</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

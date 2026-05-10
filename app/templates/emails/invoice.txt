@@ -1,0 +1,15 @@
+Sehr geehrte/r {{ invoice.customer.name }},
+
+im Anhang finden Sie die Rechnung {{ invoice.invoice_number }}{% if invoice.service_period %} für den Leistungszeitraum {{ invoice.service_period }}{% endif %}.
+
+Rechnungsbetrag: {{ "%.2f"|format(invoice.total)|replace('.', ',') }} €
+Zahlungsziel:    {{ invoice.due_date.strftime('%d.%m.%Y') }}
+IBAN:            {{ owner.iban }}
+
+Bitte überweisen Sie den Betrag bis zum {{ invoice.due_date.strftime('%d.%m.%Y') }} auf das oben genannte Konto.
+
+Bei Fragen stehe ich Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+{{ owner.name }}
+{{ owner.email }}

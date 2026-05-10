@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0">Dashboard</h2>
+  <a href="{{ url_for('invoices.create') }}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Neue Rechnung
+  </a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Offener Betrag</div>
+        <div class="fs-3 fw-bold text-primary">{{ "%.2f"|format(open_amount)|replace('.', ',') }} €</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Kunden</div>
+        <div class="fs-3 fw-bold">{{ total_customers }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h5 class="mb-3">Letzte Rechnungen</h5>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Nummer</th>
+          <th>Kunde</th>
+          <th>Datum</th>
+          <th class="text-end">Betrag</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in recent_invoices %}
+        <tr>
+          <td class="fw-semibold">{{ inv.invoice_number }}</td>
+          <td>{{ inv.customer.name }}</td>
+          <td>{{ inv.issue_date.strftime('%d.%m.%Y') }}</td>
+          <td class="text-end">{{ "%.2f"|format(inv.total)|replace('.', ',') }} €</td>
+          <td>
+            {% if inv.status == 'draft' %}
+              <span class="badge bg-secondary">Entwurf</span>
+            {% elif inv.status == 'sent' %}
+              <span class="badge bg-primary">Versendet</span>
+            {% else %}
+              <span class="badge bg-success">Bezahlt</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('invoices.detail', id=inv.id) }}" class="btn btn-sm btn-outline-secondary">
+              Details
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">Noch keine Rechnungen vorhanden.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
