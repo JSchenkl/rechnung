@@ -1,8 +1,14 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, current_app
 from flask_login import login_required
 from app.models import Invoice, Customer
 
 main_bp = Blueprint('main', __name__)
+
+
+@main_bp.route('/info')
+@login_required
+def info():
+    return render_template('info.html', commit=current_app.config['COMMIT_SHA'])
 
 
 @main_bp.route('/')

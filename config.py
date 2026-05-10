@@ -1,7 +1,22 @@
 import os
+import subprocess
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _get_commit_sha():
+    try:
+        return subprocess.check_output(
+            ['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.DEVNULL
+        ).decode().strip()
+    except Exception:
+        pass
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'COMMIT')) as f:
+            return f.read().strip()[:7]
+    except Exception:
+        return 'unknown'
 
 
 class Config:
@@ -26,6 +41,8 @@ class Config:
     OWNER_CITY = os.environ.get('OWNER_CITY', '')
     OWNER_IBAN = os.environ.get('OWNER_IBAN', '')
     OWNER_EMAIL = os.environ.get('MAIL_USERNAME', 'rechnung@julius.schenkl.de')
+
+    COMMIT_SHA = _get_commit_sha()
 
 
 class DevelopmentConfig(Config):

@@ -6,7 +6,9 @@
       "PowerShell($items = Get-ChildItem -Path \"C:\\\\Users\\\\juliu\\\\OneDrive\\\\Dokumente\\\\Claude\\\\rechnung\" -Force; $items | ForEach-Object { Write-Output \"$\\($_.Name\\) - $\\($_.PSIsContainer\\)\" })",
       "Bash(py --version)",
       "Bash(py -c \"import sys; print\\(sys.executable\\)\")",
-      "PowerShell(cd \"C:\\\\Users\\\\juliu\\\\OneDrive\\\\Dokumente\\\\Claude\\\\rechnung\"; $env:FLASK_APP = \"run.py\"; .\\\\venv\\\\Scripts\\\\flask db init 2>&1)"
+      "PowerShell(cd \"C:\\\\Users\\\\juliu\\\\OneDrive\\\\Dokumente\\\\Claude\\\\rechnung\"; $env:FLASK_APP = \"run.py\"; .\\\\venv\\\\Scripts\\\\flask db init 2>&1)",
+      "PowerShell(gh repo *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

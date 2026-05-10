@@ -17,5 +17,6 @@ jobs:
           script: |
             cd /opt/julius
             git pull
-            docker compose up -d --build
+            docker compose build --build-arg COMMIT_SHA=$(git rev-parse --short HEAD)
+            docker compose up -d
             docker compose exec -T julius-app flask db upgrade
