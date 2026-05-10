@@ -1,0 +1,22 @@
+services:
+  julius-app:
+    build: .
+    container_name: julius-app
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      FLASK_ENV: production
+    volumes:
+      - julius-data:/app/dbdata
+    expose:
+      - "5000"
+    networks:
+      - proxy
+
+volumes:
+  julius-data:
+
+networks:
+  proxy:
+    name: proxy
+    external: true
