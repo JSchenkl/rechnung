@@ -1,4 +1,6 @@
 import io
+import csv
+import re
 from datetime import date, timedelta, datetime
 
 from flask import (
@@ -142,6 +144,86 @@ def send(id):
             current_app.logger.error(f'Gewinnspiel-Auslosung fehlgeschlagen (Rechnung {invoice.id}): {e}')
 
     return redirect(url_for('invoices.detail', id=invoice.id))
+
+
+@invoices_bp.route('/import-csv', methods=['GET', 'POST'])
+@login_required
+def import_csv():
+    if request.method == 'GET':
+        return render_template('invoices/import_csv.html')
+
+    file = request.files.get('csv_file')
+    if not file or not file.filename:
+        flash('Bitte eine CSV-Datei auswählen.', 'danger')
+        return redirect(url_for('invoices.import_csv'))
+
+    try:
+        raw = file.read()
+        # Comdirect exports in Latin-1
+        try:
+            content = raw.decode('latin-1')
+        except UnicodeDecodeError:
+            content = raw.decode('utf-8', errors='replace')
+    except Exception as e:
+        flash(f'Fehler beim Lesen der Datei: {e}', 'danger')
+        return redirect(url_for('invoices.import_csv'))
+
+    # Find the header row (contains "Buchungstag")
+    lines = content.splitlines()
+    header_idx = None
+    for i, line in enumerate(lines):
+        if 'Buchungstag' in line:
+            header_idx = i
+            break
+
+    if header_idx is None:
+        flash('Ungültiges Dateiformat – keine Comdirect-Kontoauszugsdatei erkannt.', 'danger')
+        return redirect(url_for('invoices.import_csv'))
+
+    data_lines = '\n'.join(lines[header_idx:])
+    reader = csv.DictReader(io.StringIO(data_lines), delimiter=';',
+                            quotechar='"', skipinitialspace=True)
+
+    # Load open (sent) invoices
+    open_invoices = Invoice.query.filter(Invoice.status == 'sent').all()
+    invoice_map = {inv.invoice_number: inv for inv in open_invoices}
+
+    marked = []
+    skipped = []
+
+    for row in reader:
+        # Stop at trailing empty/summary rows Comdirect appends
+        buchungstag = (row.get('Buchungstag') or '').strip().strip('"')
+        if not buchungstag or buchungstag.startswith('"') or len(buchungstag) < 8:
+            continue
+
+        buchungstext = ' '.join([
+            row.get('Buchungstext') or '',
+            row.get('Vorgang') or '',
+        ]).strip()
+
+        matched_inv = None
+        for inv_number, inv in invoice_map.items():
+            # Match invoice number pattern (e.g. 2026-001) in the payment reference
+            if re.search(re.escape(inv_number), buchungstext, re.IGNORECASE):
+                matched_inv = inv
+                break
+
+        if matched_inv:
+            matched_inv.status = 'paid'
+            marked.append(matched_inv.invoice_number)
+            del invoice_map[matched_inv.invoice_number]
+        else:
+            skipped.append(buchungstext[:80] if buchungstext else buchungstag)
+
+    db.session.commit()
+
+    if marked:
+        flash(f'{len(marked)} Rechnung(en) als bezahlt markiert: {", ".join(marked)}', 'success')
+    else:
+        flash('Keine offenen Rechnungen in der Datei gefunden.', 'warning')
+
+    return redirect(url_for('invoices.list'))
 
 
 @invoices_bp.route('/<int:id>/delete', methods=['POST'])
