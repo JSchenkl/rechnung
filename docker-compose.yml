@@ -6,8 +6,10 @@ services:
     env_file: ./.env
     environment:
       FLASK_ENV: production
+      LOG_FILE: /app/logs/app.log
     volumes:
       - julius-data:/app/dbdata
+      - julius-logs:/app/logs
     expose:
       - "5000"
     networks:
@@ -15,6 +17,7 @@ services:
 
 volumes:
   julius-data:
+  julius-logs:
 
 networks:
   proxy:

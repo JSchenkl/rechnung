@@ -21,7 +21,7 @@
           <div class="mb-3">
             <label class="form-label">Standardpreis (€) *</label>
             <input type="text" name="default_price" class="form-control"
-                   value="{{ '%.2f'|format(service.default_price)|replace('.', ',') if service else '' }}"
+                   value="{{ '%.2f'|format(service.default_price)|replace('.', ',') if service and service.default_price is not none else '' }}"
                    placeholder="45,00" required>
           </div>
 

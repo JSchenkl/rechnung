@@ -49,6 +49,8 @@ class Config:
 
     COMMIT_SHA = _get_commit_sha()
 
+    LOG_FILE = os.environ.get('LOG_FILE', 'logs/app.log')
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

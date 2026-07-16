@@ -1,6 +1,8 @@
+import logging
 import os
+from logging.handlers import RotatingFileHandler
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -17,6 +19,8 @@ def create_app(config_name='default'):
 
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    _setup_logging(app)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -39,12 +43,32 @@ def create_app(config_name='default'):
     app.register_blueprint(services_bp)
     app.register_blueprint(invoices_bp)
 
+    @app.errorhandler(500)
+    def handle_internal_error(error):
+        # Flask loggt den vollen Traceback bereits selbst (app.logger, siehe _setup_logging)
+        return render_template('500.html'), 500
+
     # Tägliche Gewinnspiel-Prüfung per IMAP
     # Im Debug-Modus nur im Haupt-Prozess starten (nicht im Werkzeug-Reloader-Watcher)
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         _start_lottery_scheduler(app)
 
     return app
+
+
+def _setup_logging(app):
+    log_file = app.config['LOG_FILE']
+    log_dir = os.path.dirname(log_file)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+
+    file_handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=5)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s [%(module)s] %(message)s'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
 
 
 def _start_lottery_scheduler(app):

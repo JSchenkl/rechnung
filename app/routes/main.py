@@ -1,3 +1,6 @@
+import os
+from collections import deque
+
 from flask import Blueprint, render_template, current_app
 from flask_login import login_required
 from app.models import Invoice, Customer
@@ -8,7 +11,17 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/info')
 @login_required
 def info():
-    return render_template('info.html', commit=current_app.config['COMMIT_SHA'])
+    log_lines = _tail_log(current_app.config['LOG_FILE'], 200)
+    return render_template(
+        'info.html', commit=current_app.config['COMMIT_SHA'], log_lines=log_lines
+    )
+
+
+def _tail_log(path, n):
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding='utf-8', errors='replace') as f:
+        return list(deque(f, maxlen=n))
 
 
 @main_bp.route('/')

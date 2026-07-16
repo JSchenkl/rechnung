@@ -3,9 +3,9 @@
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-5">
+  <div class="col-md-8">
     <h2 class="mb-4">Info</h2>
-    <div class="card shadow-sm">
+    <div class="card shadow-sm mb-4">
       <div class="card-body">
         <dl class="row mb-0">
           <dt class="col-5">Anwendung</dt>
@@ -20,6 +20,17 @@
                target="_blank" class="font-monospace">{{ commit }}</a>
           </dd>
         </dl>
+      </div>
+    </div>
+
+    <h2 class="mb-3">Server-Log</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if log_lines %}
+        <pre class="mb-0 small" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap;">{% for line in log_lines %}{{ line }}{% endfor %}</pre>
+        {% else %}
+        <p class="text-muted mb-0">Noch keine Log-Einträge vorhanden.</p>
+        {% endif %}
       </div>
     </div>
   </div>
